@@ -14,6 +14,11 @@ export class InputManager {
   #onPointerDown(event) {
     window.ui.gameWindow.setPointerCapture(event.pointerId);
     this.activePointers.set(event.pointerId, event);
+    if (this.activePointers.size <= 1) {
+      const rect = window.ui.gameWindow.getBoundingClientRect();
+      this.mouse.x = event.clientX - rect.left;
+      this.mouse.y = event.clientY - rect.top;
+    }
     this.#updateButtons(event);
   }
   #onPointerUp(event) {
