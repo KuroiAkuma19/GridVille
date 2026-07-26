@@ -70,21 +70,23 @@ export class CameraManager {
       const centerY = (p1.clientY + p2.clientY) / 2;
       
       if (this.lastTouchDistance !== null && this.lastTouchDistance !== undefined) {
-         const deltaZoom = this.lastTouchDistance - distance;
+         // positive delta means fingers spread apart (should zoom in / magnify)
+         const deltaZoom = distance - this.lastTouchDistance;
          this.cameraRadius *= 1 + (deltaZoom * ZOOM_SENSITIVITY);
          this.cameraRadius = Math.min(MAX_CAMERA_RADIUS, Math.max(MIN_CAMERA_RADIUS, this.cameraRadius));
       }
       
       if (this.lastTouchCenter) {
+         // old - new: when dragging down, this is negative
          const deltaX = this.lastTouchCenter.x - centerX;
          const deltaY = this.lastTouchCenter.y - centerY;
          
          const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
          const left = new THREE.Vector3(1, 0, 0).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
          
-         // Use inverted delta for touch panning to match expected natural scrolling
-         this.cameraOrigin.add(forward.multiplyScalar(PAN_SENSITIVITY * -deltaY));
-         this.cameraOrigin.add(left.multiplyScalar(PAN_SENSITIVITY * -deltaX));
+         // Natural scrolling: PAN_SENSITIVITY (-0.01) * negative deltaY = positive (moves camera forward, world down)
+         this.cameraOrigin.add(forward.multiplyScalar(PAN_SENSITIVITY * deltaY));
+         this.cameraOrigin.add(left.multiplyScalar(PAN_SENSITIVITY * deltaX));
       }
       
       this.lastTouchDistance = distance;

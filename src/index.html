@@ -136,11 +136,17 @@
 
       <div id="info-panel" class="container">
       </div>
-      <div id="instructions">
-        INTERACT - Left Mouse<br>
-        ROTATE - Right Mouse<br>
-        PAN - Control + Right Mouse<br>
-        ZOOM - Scroll
+      <div id="instructions" style="background-color: rgba(0, 0, 0, 0.6); padding: 8px 12px; border-radius: 8px; left: 70px; border: 1px solid #4a5568;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; border-bottom: 1px solid #555; padding-bottom: 4px;">
+          <span style="font-weight: bold; color: #ccc; font-size: 0.8em;">CONTROLS</span>
+          <span onclick="document.getElementById('instructions').style.display='none'" style="cursor: pointer; color: #aaa; font-family: sans-serif; font-size: 1em; padding-left: 15px;" title="Dismiss">✖</span>
+        </div>
+        <div style="font-size: 0.9em;">
+          INTERACT - Left Mouse<br>
+          ROTATE - Right Mouse<br>
+          PAN - Control + Right Mouse<br>
+          ZOOM - Scroll
+        </div>
       </div>
       <div id="version">
         v0.3.0
