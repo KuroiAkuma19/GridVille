@@ -25,9 +25,12 @@ export class CameraManager {
     this.cameraAzimuth = 225;
     this.cameraElevation = 45;
     this.updateCameraPosition();
+    this.activePointers = new Map();
     window.ui.gameWindow.addEventListener('wheel', this.onMouseScroll.bind(this), false);
-    window.ui.gameWindow.addEventListener('mousedown', this.onMouseMove.bind(this), false);
-    window.ui.gameWindow.addEventListener('mousemove', this.onMouseMove.bind(this), false);
+    window.ui.gameWindow.addEventListener('pointerdown', this.onPointerDown.bind(this), false);
+    window.ui.gameWindow.addEventListener('pointerup', this.onPointerUp.bind(this), false);
+    window.ui.gameWindow.addEventListener('pointercancel', this.onPointerUp.bind(this), false);
+    window.ui.gameWindow.addEventListener('pointermove', this.onPointerMove.bind(this), false);
   }
   updateCameraPosition() {
     this.camera.zoom = this.cameraRadius;
@@ -39,7 +42,58 @@ export class CameraManager {
     this.camera.updateProjectionMatrix();
     this.camera.updateMatrixWorld();
   }
-  onMouseMove(event) {
+  onPointerDown(event) {
+    window.ui.gameWindow.setPointerCapture(event.pointerId);
+    this.activePointers.set(event.pointerId, event);
+  }
+  onPointerUp(event) {
+    window.ui.gameWindow.releasePointerCapture(event.pointerId);
+    this.activePointers.delete(event.pointerId);
+    this.lastTouchDistance = null;
+    this.lastTouchCenter = null;
+  }
+  onPointerMove(event) {
+    if (this.activePointers.has(event.pointerId)) {
+      this.activePointers.set(event.pointerId, event);
+    }
+    
+    if (this.activePointers.size === 2) {
+      const pointers = Array.from(this.activePointers.values());
+      const p1 = pointers[0];
+      const p2 = pointers[1];
+      
+      const dx = p1.clientX - p2.clientX;
+      const dy = p1.clientY - p2.clientY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      const centerX = (p1.clientX + p2.clientX) / 2;
+      const centerY = (p1.clientY + p2.clientY) / 2;
+      
+      if (this.lastTouchDistance !== null && this.lastTouchDistance !== undefined) {
+         const deltaZoom = this.lastTouchDistance - distance;
+         this.cameraRadius *= 1 + (deltaZoom * ZOOM_SENSITIVITY);
+         this.cameraRadius = Math.min(MAX_CAMERA_RADIUS, Math.max(MIN_CAMERA_RADIUS, this.cameraRadius));
+      }
+      
+      if (this.lastTouchCenter) {
+         const deltaX = this.lastTouchCenter.x - centerX;
+         const deltaY = this.lastTouchCenter.y - centerY;
+         
+         const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
+         const left = new THREE.Vector3(1, 0, 0).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
+         
+         // Use inverted delta for touch panning to match expected natural scrolling
+         this.cameraOrigin.add(forward.multiplyScalar(PAN_SENSITIVITY * -deltaY));
+         this.cameraOrigin.add(left.multiplyScalar(PAN_SENSITIVITY * -deltaX));
+      }
+      
+      this.lastTouchDistance = distance;
+      this.lastTouchCenter = { x: centerX, y: centerY };
+      this.updateCameraPosition();
+      return;
+    }
+
+    // Standard mouse drag rotation and panning
     if (event.buttons & RIGHT_MOUSE_BUTTON && !event.ctrlKey) {
       this.cameraAzimuth += -(event.movementX * AZIMUTH_SENSITIVITY);
       this.cameraElevation += (event.movementY * ELEVATION_SENSITIVITY);

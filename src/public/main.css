@@ -21,6 +21,7 @@ h1 {
 #render-target {
   position: relative;
   height: 100%;
+  touch-action: none;
 }
 
 #instructions {
