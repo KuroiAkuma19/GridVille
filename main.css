@@ -62,12 +62,21 @@ h1 {
   position: absolute;
   top: 80px;
   bottom: 0px;
+  overflow-y: auto;
+  overflow-x: hidden;
 
   box-shadow: 0px 0px 1px black;
 
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+
+/* Hide instructions on mobile / small screens */
+@media (max-width: 768px), (max-height: 600px) {
+  #instructions, #version {
+    display: none;
+  }
 }
 
 .ui-button {
