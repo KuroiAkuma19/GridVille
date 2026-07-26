@@ -45,12 +45,20 @@ export class CameraManager {
   onPointerDown(event) {
     window.ui.gameWindow.setPointerCapture(event.pointerId);
     this.activePointers.set(event.pointerId, event);
+    if (event.pointerType === 'touch' && this.activePointers.size === 1) {
+       this.lastTouchCenter = { x: event.clientX, y: event.clientY };
+    }
   }
   onPointerUp(event) {
     window.ui.gameWindow.releasePointerCapture(event.pointerId);
     this.activePointers.delete(event.pointerId);
     this.lastTouchDistance = null;
-    this.lastTouchCenter = null;
+    if (this.activePointers.size === 1) {
+       const remaining = Array.from(this.activePointers.values())[0];
+       this.lastTouchCenter = { x: remaining.clientX, y: remaining.clientY };
+    } else {
+       this.lastTouchCenter = null;
+    }
   }
   onPointerMove(event) {
     if (this.activePointers.has(event.pointerId)) {
@@ -66,9 +74,6 @@ export class CameraManager {
       const dy = p1.clientY - p2.clientY;
       const distance = Math.sqrt(dx * dx + dy * dy);
       
-      const centerX = (p1.clientX + p2.clientX) / 2;
-      const centerY = (p1.clientY + p2.clientY) / 2;
-      
       if (this.lastTouchDistance !== null && this.lastTouchDistance !== undefined) {
          // positive delta means fingers spread apart (should zoom in / magnify)
          const deltaZoom = distance - this.lastTouchDistance;
@@ -76,10 +81,16 @@ export class CameraManager {
          this.cameraRadius = Math.min(MAX_CAMERA_RADIUS, Math.max(MIN_CAMERA_RADIUS, this.cameraRadius));
       }
       
+      this.lastTouchDistance = distance;
+      this.updateCameraPosition();
+      return;
+    }
+    
+    // 1-finger pan
+    if (this.activePointers.size === 1 && event.pointerType === 'touch') {
       if (this.lastTouchCenter) {
-         // new - old: inverted natural scrolling based on user feedback
-         const deltaX = centerX - this.lastTouchCenter.x;
-         const deltaY = centerY - this.lastTouchCenter.y;
+         const deltaX = event.clientX - this.lastTouchCenter.x;
+         const deltaY = event.clientY - this.lastTouchCenter.y;
          
          const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
          const left = new THREE.Vector3(1, 0, 0).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
@@ -88,8 +99,7 @@ export class CameraManager {
          this.cameraOrigin.add(left.multiplyScalar(PAN_SENSITIVITY * deltaX));
       }
       
-      this.lastTouchDistance = distance;
-      this.lastTouchCenter = { x: centerX, y: centerY };
+      this.lastTouchCenter = { x: event.clientX, y: event.clientY };
       this.updateCameraPosition();
       return;
     }
