@@ -77,14 +77,13 @@ export class CameraManager {
       }
       
       if (this.lastTouchCenter) {
-         // old - new: when dragging down, this is negative
-         const deltaX = this.lastTouchCenter.x - centerX;
-         const deltaY = this.lastTouchCenter.y - centerY;
+         // new - old: inverted natural scrolling based on user feedback
+         const deltaX = centerX - this.lastTouchCenter.x;
+         const deltaY = centerY - this.lastTouchCenter.y;
          
          const forward = new THREE.Vector3(0, 0, 1).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
          const left = new THREE.Vector3(1, 0, 0).applyAxisAngle(Y_AXIS, this.cameraAzimuth * DEG2RAD);
          
-         // Natural scrolling: PAN_SENSITIVITY (-0.01) * negative deltaY = positive (moves camera forward, world down)
          this.cameraOrigin.add(forward.multiplyScalar(PAN_SENSITIVITY * deltaY));
          this.cameraOrigin.add(left.multiplyScalar(PAN_SENSITIVITY * deltaX));
       }

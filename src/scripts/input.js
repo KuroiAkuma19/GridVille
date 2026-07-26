@@ -39,8 +39,9 @@ export class InputManager {
       this.activePointers.set(event.pointerId, event);
     }
     if (this.activePointers.size <= 1) {
-      this.mouse.x = event.clientX;
-      this.mouse.y = event.clientY;
+      const rect = window.ui.gameWindow.getBoundingClientRect();
+      this.mouse.x = event.clientX - rect.left;
+      this.mouse.y = event.clientY - rect.top;
     }
     this.#updateButtons(event);
   }

@@ -14,6 +14,7 @@ export class Game {
     this.renderer = new THREE.WebGLRenderer({ 
       antialias: true
     });
+    this.renderer.setPixelRatio(window.devicePixelRatio);
     this.scene = new THREE.Scene();
     this.inputManager = new InputManager(window.ui.gameWindow);
     this.cameraManager = new CameraManager(window.ui.gameWindow);
